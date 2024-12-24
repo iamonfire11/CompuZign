@@ -1,0 +1,120 @@
+Justine's CLI Documentation
+============================
+
+This CLI tool allows users to interact with JFrog's Artifactory to perform various tasks like system ping, system version checks, repository management, and more. It uses an API token for authentication and provides a simple menu-based interface. To access the CLI, please use the following user details:
+
+username: user
+password: S3cur3p@$$word123 
+
+Features:
+---------
+1. System Ping - Check if the Artifactory instance is up and running.
+2. System Version - Retrieve the current version of the Artifactory instance.
+3. Get Storage Info - Fetch storage usage details of the Artifactory instance.
+4. Create Repository - Create a new repository with user-specified details.
+5. Update/Delete Repository - Update or delete existing repositories.
+6. List Repositories - Display a list of all repositories in the Artifactory instance.
+
+How to use the CLI tool:
+------------------------
+1. You will be greeted by a welcome message and asked for your log in details. Only 3 attempts are given to the user to enter the CLI tool before restarting the script.
+2. Use the menu to select what task you would like the tool to do such as system ping, create repository, etc.
+3. For specific tasks such as creating a repository, please follow the prompts to provide necessary details.
+4. After the chosen task is completed, you can choose to perform another command or exit the tool.
+
+
+FUNCTIONS & THOUGHT PROCESSES
+-----------------------------
+I had tested each function individually first before adding the main menu to complete the tool. In initial researching:
+(I) I browsed through the JFrog website and tried to understand it as much as possible.
+(II) I found the click, and the inquirer libraries. Inquirer is useful for a better UI since it allows users to make their choices easier through lists. It also helped to streamline data and prevent user error especially when it came to inputting package types as the list was extensive.
+(III) When it came to developing the respective functions, I found the documentation for JFrog to be slightly challenging to understand at first, but once I had got one, I was able to figure out majority of the rest.
+
+1. 
+mainmenu()
+-Displays the menu of tasks and returns the user's choice.
+-Choices include System Ping, Get System Version, Get Storage Info, Create Repository, Update/delete Repository, List Repositories
+
+2.
+system_ping(url,token)
+-Receives the artifactory URL and the token and authenticates the GET request to check if the system is running normally.
+-Prints the status of the system to the user.
+-Source: https://jfrog.com/help/r/jfrog-rest-apis/system-health-ping
+
+3.
+system_version(url,token)
+-Receives the artifactory URL and the token to authenticate the GET request at /api/system/ping. 
+-The system version is taken from the 'X-JFrog-Version' header from the response and printed to the user.
+-The idea was taken from this forum from Stack Overflow, https://stackoverflow.com/questions/62666689/how-to-get-jfrog-artifactory-and-xray-versions
+
+4.
+storage_info(token,url)
+-Receives the artifactory URL and the token to authenticate the GET request at /api/storageinfo.
+-The json response containing the storage summary information regarding binaries, file store and repositories is printed to the user.
+-Source: https://jfrog.com/help/r/jfrog-rest-apis/get-storage-summary-info
+
+5.
+create_repo(token, url)
+-Allows the user to create a new repository.
+-The user enters the desired unique key/name of the new repository, then the desired class and package types through the use of lists. 
+-From “https://jfrog.com/help/r/jfrog-rest-apis/create-multiple-repositories”, we learn in the json payload that rclass is type of repository aka local, remote, virtual, federated which the user can choose from. 
+-I used lists for class and package type to help streamline data to prevent user error, and I would need less error checking lines of code in regards to typos. This made it more efficient to send the payload. 
+-The default class is local, and package type is generic.
+-User input is stored in a dictionary named answers.
+-There exists a remote_url variable because if the user has chosen remote class, they would need to enter that data.
+-After receiving the inputs, create_repo calls another function, does_repo_exist, to check if the repository has been created before with that unique key. 
+-If does_repo_exist returns true, the user exits from the function. Otherwise, it creates the payload to be sent with the PUT request.
+-The token is used to authenticate the PUT request at /artifactory/api/repositories/{repoKey} where {repoKey} was replaced by the input, answers['key'], in my code.
+- Source: https://jfrog.com/help/r/jfrog-rest-apis/create-repository
+
+6.
+does_repo_exist(token,url,answers)
+-Checks if a repository of the desired name exists.
+-It submits a GET request at /api/repositories/{answers['key']} where answers['key']} is the user input. If the response is 200, it exists, and returns true. If 400, it does not exist and returns false.
+-Based on the documentation, https://jfrog.com/help/r/jfrog-rest-apis/check-if-repository-exists, this method could also be used but I wrote my function this way for simplicity.
+
+7.
+list_all_repositories(token,url)
+- Sends a GET request to the /api/repositories endpoint. It includes the token in the 'Authorization' header to authenticate the request.
+- If the request is successful, it parses and prints the JSON response, containing a list of repositories and their metadata.
+
+8.
+update_repo(token,url)
+-Allows user to update a desired repository.
+-The user is prompted to enter the repository name, as well as if they would like to update or delete the repository.
+-If the user selects update, does_repo_exist is called and returns true if it does exist. The user is then prompted to change any of the following fields: description, notes, include pattern, exclude pattern, repository layout, and if they would like to enable xray index or priority resolution. 
+-When the user has finished making a change on a field, they are asked if they would like to make any more. If yes, the menu would restart and they can choose another field to update. 
+-When the user is completed, the token is used to authenticate the PUT request at /api/repositories/{answers['key']} where key is the key of the repository they would like to be updated, and the new details are sent via the payload.
+-If the repository does not exist, an error message is printed to the user.
+-If the user chooses to delete the repository, the function deleterepo is called.
+
+9.
+deleterepo(token,url,answers)
+-Deletes a specified repository
+-Sends a DELETE request to /api/repositories/{answers['key']} endpoint of the Artifactory REST API, and includes the token to authenticate the request.
+-If successful, it prints a success message confirming that the repository was deleted.
+
+10.
+login_cli()
+-Prints welcome message to CLI tool
+-Prompts the user to enter their username and password.
+-Based on that information, their token is created via the function create_token.
+-Each time a user logs in, a new token is generated for security purposes.
+-There are 3 attempts to log into the tool before exiting.
+
+11.
+create_token(entered_username, entered_password)
+Assumption: user is pre-existing.
+-The function accepts the username and password from the user that was passed via login_cli.
+-It creates a POST request of the user's username, and password, to the endpoint /access/api/v1/tokens.
+-Once successful, token_data holds all the token information.
+-The access token is then retrieved from the token_data dictionary and returned to login_cli.
+-Initial configuration of the function and request were providing an invalid credentials error. This was solved from going onto the Artifactory platform -> admininistration -> General -> Security -> Enable token generation via API. 
+Source: https://jfrog.com/help/r/jfrog-platform-administration-documentation/multi-factor-authentication
+-To create the token API call itself, "scope": "applied-permissions/user" was taken from source: https://jfrog.com/help/r/jfrog-rest-apis/create-token-api-examples
+
+
+To see the help menu:
+---------------------
+python script.py --help
+
