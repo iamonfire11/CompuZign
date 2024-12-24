@@ -5,6 +5,7 @@ This CLI tool allows users to interact with JFrog's Artifactory to perform vario
 
 username: user
 password: S3cur3p@$$word123 
+Artifactory url: https://interviewt.jfrog.io
 
 Features:
 ---------
