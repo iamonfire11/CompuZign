@@ -240,7 +240,7 @@ def update_repo(token,url):
                         end =False
                
             headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-            response = requests.put(f"{url}/api/repositories/{answers['key']}", headers=headers, data=json.dumps(payload))
+            response = requests.patch(f"{url}/api/repositories/{answers['key']}", headers=headers, data=json.dumps(payload))
             if response.status_code == 200 or 201:
                 print(f"Repository '{answers['key']}' updated successfully.")
             else:
