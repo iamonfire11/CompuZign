@@ -5,7 +5,7 @@ This CLI tool allows users to interact with JFrog's Artifactory to perform vario
 
 username: user
 password: S3cur3p@$$word123 
-Artifactory url: https://interviewt.jfrog.io
+Artifactory url: https://interviewt.jfrog.io/artifactory/MyActualRepository/CompuZign.zip
 
 Features:
 ---------
@@ -34,7 +34,7 @@ I had tested each function individually first before adding the main menu to com
 1. 
 mainmenu()
 -Displays the menu of tasks and returns the user's choice.
--Choices include System Ping, Get System Version, Get Storage Info, Create Repository, Update/delete Repository, List Repositories
+-Choices include System Ping, Get System Version, Get Storage Info, Create Repository, Update/delete Repository, List Repositories, and Help
 
 2.
 system_ping(url,token)
@@ -114,8 +114,4 @@ Assumption: user is pre-existing.
 Source: https://jfrog.com/help/r/jfrog-platform-administration-documentation/multi-factor-authentication
 -To create the token API call itself, "scope": "applied-permissions/user" was taken from source: https://jfrog.com/help/r/jfrog-rest-apis/create-token-api-examples
 
-
-To see the help menu:
----------------------
-python script.py --help
 
